@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: Chat_Bot_Lang_4J
+  datasource:
+    url: jdbc:postgresql://localhost:5432/CRM_Project?reWriteBatchedInserts=true
+    username: bitznomad
+    password: 123123a
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    generate-ddl: true
+  google:
+    ai:
+      project-id: BitzNomad
+      location: us-central1  # Common Google AI API location
+      model: gemini-2.0-flash  # You can choose gemini-1.5-pro, gemini-1.5-flash, etc.
+      credentials-path: D:\LearingWithBitznomad\GoogleKey\
+      credentials-file: bitznomad-d818ff3545d5.json
