@@ -1,4 +1,4 @@
-package com.example.Chat_Bot_Lang4J.controller;
+package com.example.Chat_Bot_Lang4J.AI.controller;
 
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
