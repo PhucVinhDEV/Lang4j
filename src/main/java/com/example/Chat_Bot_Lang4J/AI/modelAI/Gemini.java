@@ -1,4 +1,4 @@
-package com.example.Chat_Bot_Lang4J.AI.model;
+package com.example.Chat_Bot_Lang4J.AI.modelAI;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.vertexai.VertexAiGeminiChatModel;
