@@ -1,11 +1,14 @@
-package com.example.Chat_Bot_Lang4J.AI.model;
+package com.example.Chat_Bot_Lang4J.AI.modelAI;
 
-import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 import org.springframework.context.annotation.Bean;
 import dev.langchain4j.model.vertexai.VertexAiEmbeddingModel;
+import org.springframework.context.annotation.Configuration;
 
+import static dev.langchain4j.internal.Utils.randomUUID;
+
+@Configuration
 public class vertexAiEmbeddingModel {
     private static final String PROJECT_ID = "bitznomad";
     private static final String MODEL_NAME = "text-multilingual-embedding-002";
@@ -28,4 +31,20 @@ public class vertexAiEmbeddingModel {
                 .build();
     }
 
+    @Bean
+    public ChromaEmbeddingStore chromaEmbeddingStore(){
+
+        try {
+            return ChromaEmbeddingStore.builder()
+                    .baseUrl("http://localhost:8000")
+                    .collectionName(randomUUID())
+                    .logRequests(true)
+                    .logResponses(true)
+                    .build();
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+    }
 }

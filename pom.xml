@@ -67,7 +67,11 @@
 			<artifactId>spring-ai-chroma-store-spring-boot-starter</artifactId>
 			<version>1.0.0-M2</version>
 		</dependency>
-
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-chroma</artifactId>
+			<version>1.0.1-beta6</version>
+		</dependency>
 		<!-- LangChain4j Core -->
 		<dependency>
 			<groupId>dev.langchain4j</groupId>
@@ -124,5 +128,9 @@
 			<name>Spring Milestone Repository</name>
 			<url>https://repo.spring.io/milestone</url>
 		</repository>
+			<repository>
+				<id>jitpack.io</id>
+				<url>https://jitpack.io</url>
+			</repository>
 	</repositories>
 </project>
