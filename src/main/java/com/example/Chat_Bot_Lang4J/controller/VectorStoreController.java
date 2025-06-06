@@ -1,8 +1,7 @@
-package com.example.Chat_Bot_Lang4J.AI.controller;
+package com.example.Chat_Bot_Lang4J.controller;
 
-import com.example.Chat_Bot_Lang4J.AI.model.AddDocumentRequest;
-import com.example.Chat_Bot_Lang4J.AI.model.BatchAddRequest;
-import com.example.Chat_Bot_Lang4J.AI.model.SearchRequest;
+import com.example.Chat_Bot_Lang4J.model.AddDocumentRequest;
+import com.example.Chat_Bot_Lang4J.model.SearchRequest;
 import com.example.Chat_Bot_Lang4J.Data.Vector.VectorService;
 
 import dev.langchain4j.data.document.Document;

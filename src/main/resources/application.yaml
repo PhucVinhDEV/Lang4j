@@ -22,3 +22,48 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.ai.autoconfigure.vectorstore.chroma.ChromaVectorStoreAutoConfiguration
+# VertexAI Configuration - HARDCODED
+vertex:
+  ai:
+    project-id: bitznomad
+    location: us-central1
+    endpoint: us-central1-aiplatform.googleapis.com:443
+    publisher: google
+    model-name: text-multilingual-embedding-002
+    max-retries: 3
+    max-segments-per-batch: 40
+    max-tokens-per-batch: 2048
+    output-dimensionality: 512
+    auto-truncate: true
+    task-type: SEMANTIC_SIMILARITY
+
+# ChromaDB Configuration - HARDCODED
+chroma:
+  external-url: # Leave empty for auto-container
+  default-url: http://localhost:8000
+  docker-image: ghcr.io/chroma-core/chroma:latest
+  docker-port: 8000
+  startup-wait-ms: 3000
+  collection-name: chat-bot-collection
+  log-requests: true
+  log-responses: true
+  anonymized-telemetry: false
+  allow-reset: true
+
+# Logging Configuration - HARDCODED
+logging:
+  level:
+    com.example.Chat_Bot_Lang4J: DEBUG
+    org.springframework.context: INFO
+    org.springframework.beans: INFO
+    dev.langchain4j: INFO
+    org.testcontainers: INFO
+  pattern:
+    # Beautiful colored console pattern
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr([%15.15t]){magenta} %clr(%highlight(%-5level)){cyan} %clr(%logger{25}){blue} %clr(:){faint} %clr(%msg%n){green}"
+    # File pattern (no colors)
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  # Enable ANSI colors
+  ansi:
+    enabled: always
+

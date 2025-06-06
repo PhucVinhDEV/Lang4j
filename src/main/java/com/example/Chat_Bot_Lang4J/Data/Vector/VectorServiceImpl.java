@@ -9,6 +9,8 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,16 +20,20 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 public class VectorServiceImpl implements VectorService{
 
 
     private final ChromaEmbeddingStore chromaEmbeddingStore;
     private final EmbeddingModel embeddingModel;
+
+    // ✅ FIX: Add @Autowired annotation
+    @Autowired
     public VectorServiceImpl(ChromaEmbeddingStore chromaEmbeddingStore, EmbeddingModel embeddingModel) {
         this.chromaEmbeddingStore = chromaEmbeddingStore;
         this.embeddingModel = embeddingModel;
+        log.info("✅ VectorServiceImpl initialized successfully");
     }
 
 
