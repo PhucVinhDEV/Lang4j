@@ -1,104 +1,266 @@
-# Chat_Bot_Lang4J
+# Chat Bot Lang4J
+
+<div align="center">
+
+**Intelligent Chatbot with RAG and Text-to-SQL Capabilities**
+
+[![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-6DB33F?style=flat-square&logo=spring-boot)](https://spring.io/projects/spring-boot)
+[![LangChain4j](https://img.shields.io/badge/LangChain4j-1.0.0-FF6B35?style=flat-square&logo=chainlink&logoColor=white)](https://github.com/langchain4j/langchain4j)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
+</div>
+
+---
 
 ## Giới thiệu
 
-Đây là một dự án chatbot được xây dựng với **Spring Boot** và **LangChain4j**. Mục tiêu chính của dự án là triển khai một hệ thống **Retrieval-Augmented Generation (RAG)** kết hợp với một **Agent Text-to-SQL**.
+Dự án chatbot được xây dựng với **Spring Boot** và **LangChain4j**, triển khai hệ thống **Retrieval-Augmented Generation (RAG)** kết hợp với **Agent Text-to-SQL**. Chatbot có khả năng:
 
-Hệ thống cho phép chatbot trả lời các câu hỏi của người dùng bằng cách:
+- **Text-to-SQL**: Truy vấn trực tiếp PostgreSQL thông qua chuyển đổi ngôn ngữ tự nhiên thành SQL
+- **RAG Search**: Tìm kiếm ngữ nghĩa trong ChromaDB để trả lời câu hỏi mô tả và gợi ý
 
-1.  Truy vấn trực tiếp cơ sở dữ liệu **PostgreSQL** cá nhân thông qua việc chuyển đổi ngôn ngữ tự nhiên thành câu lệnh SQL.
-2.  Tìm kiếm thông tin sản phẩm đã được vector hóa và lưu trữ trong **ChromaDB** để trả lời các câu hỏi mang tính ngữ nghĩa.
+---
+
+## Kiến trúc
+
+```mermaid
+graph TB
+    A[User Query] --> B[Gemini Agent]
+    
+    B --> C{Query Analysis}
+    
+    C -->|Structured Data<br/>Price, Stock, Count| D[Text-to-SQL]
+    C -->|Semantic Search<br/>Recommendations, Descriptions| E[RAG Pipeline]
+    
+    D --> F[Gemini Model]
+    F --> G[SQL Query Generation]
+    G --> H[PostgreSQL]
+    H --> I[Structured Data]
+    
+    E --> J[Embedding Model<br/>text-multilingual-embedding-002]
+    J --> K[ChromaDB Vector Search]
+    K --> L[Relevant Documents]
+    
+    I --> M[Gemini Response Generator]
+    L --> M
+    
+    M --> N[Natural Language Response]
+    
+    style A fill:#e1f5fe
+    style N fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style M fill:#e0f2f1
+```
+
+---
 
 ## Luồng hoạt động
 
-Dự án hoạt động dựa trên hai luồng chính: luồng nhập dữ liệu và luồng truy vấn của chatbot.
+### 1. Data Ingestion (RAG Pipeline)
 
-### 1. Luồng nhập dữ liệu (Data Ingestion - RAG)
+```
+PostgreSQL → Embedding Model → ChromaDB Vector Store
+```
 
-Luồng này chịu trách nhiệm chuẩn bị dữ liệu cho việc tìm kiếm ngữ nghĩa.
+1. **Đọc dữ liệu**: Lấy thông tin sản phẩm từ PostgreSQL
+2. **Tạo Embeddings**: Sử dụng `text-multilingual-embedding-002` để vector hóa
+3. **Lưu trữ Vector**: Lưu vào ChromaDB cho semantic search
 
-1.  **Đọc dữ liệu**: Dữ liệu sản phẩm được đọc từ cơ sở dữ liệu **PostgreSQL**.
-2.  **Tạo Embeddings**: Sử dụng một **Embedding Model (text-multilingual-embedding-002)**, thông tin sản phẩm (ví dụ: mô tả, tên) được chuyển đổi thành các vector embedding.
-3.  **Lưu trữ Vector**: Các vector embedding này được lưu trữ trong cơ sở dữ liệu vector **ChromaDB**, sẵn sàng cho việc tìm kiếm.
+### 2. Query Processing
 
-### 2. Luồng truy vấn của Chatbot
+```
+User Question → Query Analysis → Tool Selection → Data Retrieval → Response Generation
+```
 
-Khi người dùng gửi một câu hỏi, Agent của chatbot sẽ xử lý như sau:
+| Tool | Khi nào sử dụng | Ví dụ |
+|------|----------------|-------|
+| **Text-to-SQL** | Dữ liệu có cấu trúc, số liệu | "Giá iPhone 15 là bao nhiêu?" |
+| **RAG Search** | Câu hỏi ngữ nghĩa, gợi ý | "Smartphone nào phù hợp cho sinh viên?" |
 
-1.  **Phân tích câu hỏi**: **Gemini model** phân tích câu hỏi của người dùng để xác định ý định.
-2.  **Lựa chọn công cụ (Tool Selection)**:
+### 3. RAG Customization
 
-- **Text-to-SQL**: Nếu câu hỏi yêu cầu dữ liệu có cấu trúc (ví dụ: "giá sản phẩm X là bao nhiêu?", "còn bao nhiêu sản phẩm trong kho?"), Agent sẽ sử dụng **Gemini model** để tạo một câu lệnh SQL tương ứng.
-- **RAG (ChromaDB Search)**: Nếu câu hỏi mang tính ngữ nghĩa hoặc yêu cầu mô tả (ví dụ: "gợi ý sản phẩm phù hợp cho người mới bắt đầu"), Agent sẽ thực hiện tìm kiếm trong **ChromaDB** để lấy ra các tài liệu liên quan.
+- **Top K**: Số lượng documents truy xuất
+- **Minimum Score**: Ngưỡng similarity threshold
+- **Re-ranking**: Cross-encoder để cải thiện độ chính xác
 
-3.  **Thực thi và tổng hợp**:
-
-- Câu lệnh SQL được thực thi trên **PostgreSQL** để lấy dữ liệu chính xác.
-- Kết quả tìm kiếm từ **ChromaDB** được lấy ra.
-
-4.  **Tạo câu trả lời**: Dữ liệu thu thập được (từ SQL hoặc ChromaDB) cùng với câu hỏi ban đầu sẽ được gửi đến **Gemini model**. Gemini sẽ tổng hợp thông tin và tạo ra một câu trả lời tự nhiên, mạch lạc cho người dùng.
-
-#### Tùy chỉnh luồng RAG (Retrieval Customization)
-
-Đúng vậy, luồng RAG có thể được tùy chỉnh linh hoạt:
-
-- **Số lượng kết quả (Top K)**: Bạn có thể chỉ định số lượng tài liệu hàng đầu (`top_k`) cần truy xuất từ ChromaDB. Đây là tham số cơ bản để cân bằng giữa lượng thông tin và độ nhiễu.
-- **Ngưỡng tương đồng tối thiểu (Minimum Score)**: Bạn có thể đặt một ngưỡng điểm tương đồng (`min_score`) để lọc ra những kết quả không đủ liên quan.
-- **Tái xếp hạng (Re-ranking)**: Đối với các hệ thống phức tạp hơn, sau khi truy xuất, một mô hình `cross-encoder` (re-ranker) có thể được sử dụng để đánh giá lại và sắp xếp lại các tài liệu, giúp đưa ra kết quả chính xác nhất lên đầu.
-
+---
 
 ## Tính năng chính
 
-- **Agent thông minh**: Sử dụng một Agent có khả năng lựa chọn giữa các công cụ khác nhau (Text-to-SQL, RAG) để trả lời câu hỏi một cách tối ưu.
-- **Text-to-SQL**: Tự động chuyển đổi câu hỏi bằng ngôn ngữ tự nhiên thành các truy vấn SQL để lấy dữ liệu trực tiếp từ PostgreSQL.
-- **Retrieval-Augmented Generation (RAG)**: Làm giàu kiến thức của chatbot bằng cách cho phép nó truy cập và tìm kiếm trên dữ liệu sản phẩm đã được nhúng trong ChromaDB.
-- **Tích hợp đa mô hình**: Sử dụng **Gemini** cho việc xử lý ngôn ngữ và **Embedding Models** để tạo vector.
+- **Agent thông minh**: Tự động lựa chọn công cụ phù hợp (Text-to-SQL, RAG)
+- **Text-to-SQL**: Chuyển đổi ngôn ngữ tự nhiên thành SQL queries
+- **RAG**: Semantic search trên knowledge base được vector hóa
+- **Multi-model**: Tích hợp Gemini + Embedding models
 
-## Công nghệ sử dụng
+---
 
-- **Backend**: Spring Boot 3.4.5
-- **Ngôn ngữ**: Java 17
-- **AI/LLM**:
-  - LangChain4j 1.0.0
-  - Google Gemini (thông qua Vertex AI)
-  - Embedding Model (text-multilingual-embedding-002)
-- **Cơ sở dữ liệu**:
-  - PostgreSQL
-  - ChromaDB (sử dụng Testcontainers)
-- **Build Tool**: Maven
-- **Khác**: Lombok
+## Tech Stack
 
-## Yêu cầu hệ thống
+<table>
+<tr>
+<td><strong>Backend</strong></td>
+<td>Spring Boot 3.4.5, Java 17, Maven</td>
+</tr>
+<tr>
+<td><strong>AI/LLM</strong></td>
+<td>LangChain4j 1.0.0, Google Gemini (Vertex AI), text-multilingual-embedding-002</td>
+</tr>
+<tr>
+<td><strong>Database</strong></td>
+<td>PostgreSQL, ChromaDB (Testcontainers)</td>
+</tr>
+<tr>
+<td><strong>Tools</strong></td>
+<td>Docker, Lombok</td>
+</tr>
+</table>
 
-Trước khi bắt đầu, hãy đảm bảo bạn đã cài đặt các công cụ sau:
+---
 
-- [JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) hoặc phiên bản mới hơn
-- [Apache Maven](https://maven.apache.org/download.cgi)
-- [Docker](https://www.docker.com/products/docker-desktop/) (để chạy ChromaDB)
-- Một instance của [PostgreSQL](https://www.postgresql.org/download/) đang chạy.
+## Prerequisites
 
-## Cấu hình
+| Tool | Version | Purpose |
+|------|---------|---------|
+| **Java JDK** | 17+ | [Download](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) |
+| **Maven** | 3.8+ | [Download](https://maven.apache.org/download.cgi) |
+| **Docker** | Latest | [Download](https://www.docker.com/products/docker-desktop/) |
+| **PostgreSQL** | 13+ | [Download](https://www.postgresql.org/download/) |
 
-1.  **Cơ sở dữ liệu PostgreSQL**:
-    Mở file `src/main/resources/application.properties` và cấu hình thông tin kết nối đến PostgreSQL của bạn:
+---
 
-    ```properties
-    spring.datasource.url=jdbc:postgresql://localhost:5432/your_database
-    spring.datasource.username=your_username
-    spring.datasource.password=your_password
-    spring.jpa.hibernate.ddl-auto=update
-    ```
+## Configuration
 
-2.  **Cơ sở dữ liệu Chroma(Vector)**:
-    Cấu hình cho ChromaDB được quản lý tự động thông qua Testcontainers. Bạn chỉ cần đảm bảo Docker đang chạy trên máy của mình.
+### 1. PostgreSQL Database
 
-3.  **Google Vertex AI (Gemini)**:
-    Dự án này sử dụng `langchain4j-vertex-ai-gemini`. Bạn cần phải cấu hình xác thực với Google Cloud. Hãy đảm bảo rằng bạn đã tạo một project trên Google Cloud và đã bật Vertex AI API.
+Cấu hình trong `src/main/resources/application.properties`:
 
-    Cách đơn giản nhất để xác thực là thông qua Google Cloud CLI:
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/your_database
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
 
-    ```bash
-    gcloud auth application-default login
-    ```
+# JPA Settings
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+```
 
-    Thư viện sẽ tự động nhận diện thông tin xác thực của bạn.
+### 2. ChromaDB (Vector Database)
+
+ChromaDB được quản lý tự động thông qua **Testcontainers**. Chỉ cần đảm bảo Docker đang chạy.
+
+### 3. Google Vertex AI Setup
+
+#### 🔧 **Bước 1: Tạo Google Cloud Project**
+
+```bash
+# Tạo project mới
+gcloud projects create your-project-id --name="Chatbot Project"
+
+# Set project làm default
+gcloud config set project your-project-id
+
+# Kiểm tra project hiện tại
+gcloud config get-value project
+```
+
+#### 🔧 **Bước 2: Enable Required APIs**
+
+```bash
+# Enable Vertex AI API
+gcloud services enable aiplatform.googleapis.com
+
+# Enable Compute Engine API (required)
+gcloud services enable compute.googleapis.com
+
+# Kiểm tra APIs đã enable
+gcloud services list --enabled --filter="aiplatform.googleapis.com OR compute.googleapis.com"
+```
+
+#### 🔧 **Bước 3: Authentication Setup**
+
+**Option A: Application Default Credentials (Recommended for Development)**
+
+```bash
+# Login với user account
+gcloud auth application-default login
+
+# Verify authentication
+gcloud auth application-default print-access-token
+```
+
+**Option B: Service Account (Recommended for Production)**
+
+```bash
+# Tạo service account
+gcloud iam service-accounts create chatbot-service-account \
+    --description="Service account for chatbot application" \
+    --display-name="Chatbot Service Account"
+
+# Gán quyền Vertex AI User
+gcloud projects add-iam-policy-binding your-project-id \
+    --member="serviceAccount:chatbot-service-account@your-project-id.iam.gserviceaccount.com" \
+    --role="roles/aiplatform.user"
+
+# Tạo và download key file
+gcloud iam service-accounts keys create ~/chatbot-service-key.json \
+    --iam-account=chatbot-service-account@your-project-id.iam.gserviceaccount.com
+
+# Set environment variable
+export GOOGLE_APPLICATION_CREDENTIALS="$HOME/chatbot-service-key.json"
+
+
+
+#### 📊 **Vertex AI Pricing** (Reference)
+
+| Model | Input (per 1K tokens) | Output (per 1K tokens) |
+|-------|----------------------|------------------------|
+| Gemini Pro | $0.000125 | $0.000375 |
+| text-multilingual-embedding-002 | $0.0001 | - |
+
+
+
+
+
+## Troubleshooting
+
+### Common Issues
+
+**🔴 Vertex AI Authentication Error**
+```bash
+# Re-authenticate
+gcloud auth application-default revoke
+gcloud auth application-default login
+```
+
+**🔴 Project ID Not Found**
+```bash
+# Verify project exists and is accessible
+gcloud projects describe your-project-id
+```
+
+**🔴 API Not Enabled**
+```bash
+# Check enabled APIs
+gcloud services list --enabled --filter="aiplatform"
+```
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ using Spring Boot, LangChain4j, and Google Vertex AI**
+
+[Documentation](docs/) • [Issues](https://github.com/your-repo/issues) • [Contributing](CONTRIBUTING.md)
+
+</div>
