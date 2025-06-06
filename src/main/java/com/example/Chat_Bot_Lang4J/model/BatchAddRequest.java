@@ -1,4 +1,4 @@
-package com.example.Chat_Bot_Lang4J.AI.model;
+package com.example.Chat_Bot_Lang4J.model;
 
 import java.util.List;
 
