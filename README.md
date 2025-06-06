@@ -15,10 +15,10 @@
 
 ## Giới thiệu
 
-Dự án chatbot được xây dựng với **Spring Boot** và **LangChain4j**, triển khai hệ thống **Retrieval-Augmented Generation (RAG)** kết hợp với **Agent Text-to-SQL**. Chatbot có khả năng:
+Dự án chatbot được xây dựng với **Spring Boot** và **LangChain4j**, triển khai hệ thống **Retrieval-Augmented Generation (RAG)** với hai luồng xử lý thông minh. Chatbot có khả năng:
 
-- **Text-to-SQL**: Truy vấn trực tiếp PostgreSQL thông qua chuyển đổi ngôn ngữ tự nhiên thành SQL
-- **RAG Search**: Tìm kiếm ngữ nghĩa trong ChromaDB để trả lời câu hỏi mô tả và gợi ý
+- **SQL RAG**: Sử dụng RAG để tìm kiếm SQL templates/examples, sau đó generate SQL queries cho dữ liệu có cấu trúc
+- **Document RAG**: Tìm kiếm ngữ nghĩa trong ChromaDB để trả lời câu hỏi mô tả và gợi ý
 
 ---
 
@@ -30,29 +30,31 @@ graph TB
     
     B --> C{Query Analysis}
     
-    C -->|Structured Data<br/>Price, Stock, Count| D[Text-to-SQL]
-    C -->|Semantic Search<br/>Recommendations, Descriptions| E[RAG Pipeline]
+    C -->|Structured Data<br/>Price, Stock, Count| D[SQL RAG Pipeline]
+    C -->|Semantic Search<br/>Recommendations, Descriptions| E[Document RAG Pipeline]
     
-    D --> F[Gemini Model]
-    F --> G[SQL Query Generation]
-    G --> H[PostgreSQL]
-    H --> I[Structured Data]
+    D --> F[Embedding Model<br/>text-multilingual-embedding-002]
+    F --> G[ChromaDB SQL Context Search]
+    G --> H[SQL Templates & Examples]
+    H --> I[Gemini SQL Generator]
+    I --> J[PostgreSQL Execution]
+    J --> K[Query Results]
     
-    E --> J[Embedding Model<br/>text-multilingual-embedding-002]
-    J --> K[ChromaDB Vector Search]
-    K --> L[Relevant Documents]
+    E --> L[Embedding Model<br/>text-multilingual-embedding-002]
+    L --> M[ChromaDB Document Search]
+    M --> N[Relevant Documents]
     
-    I --> M[Gemini Response Generator]
-    L --> M
+    K --> O[Gemini Response Generator]
+    N --> O
     
-    M --> N[Natural Language Response]
+    O --> P[Natural Language Response]
     
     style A fill:#e1f5fe
-    style N fill:#e8f5e8
+    style P fill:#e8f5e8
     style C fill:#fff3e0
     style D fill:#fce4ec
     style E fill:#f3e5f5
-    style M fill:#e0f2f1
+    style O fill:#e0f2f1
 ```
 
 ---
@@ -72,13 +74,13 @@ PostgreSQL → Embedding Model → ChromaDB Vector Store
 ### 2. Query Processing
 
 ```
-User Question → Query Analysis → Tool Selection → Data Retrieval → Response Generation
+User Question → Query Analysis → Pipeline Selection → RAG Retrieval → SQL/Document Processing → Response Generation
 ```
 
-| Tool | Khi nào sử dụng | Ví dụ |
-|------|----------------|-------|
-| **Text-to-SQL** | Dữ liệu có cấu trúc, số liệu | "Giá iPhone 15 là bao nhiêu?" |
-| **RAG Search** | Câu hỏi ngữ nghĩa, gợi ý | "Smartphone nào phù hợp cho sinh viên?" |
+| Pipeline | Khi nào sử dụng | Process | Ví dụ |
+|----------|----------------|---------|-------|
+| **SQL RAG** | Dữ liệu có cấu trúc, số liệu | RAG SQL templates → Generate SQL → Execute | "Giá iPhone 15 là bao nhiêu?" |
+| **Document RAG** | Câu hỏi ngữ nghĩa, gợi ý | RAG documents → Context retrieval | "Smartphone nào phù hợp cho sinh viên?" |
 
 ### 3. RAG Customization
 
@@ -90,10 +92,10 @@ User Question → Query Analysis → Tool Selection → Data Retrieval → Respo
 
 ## Tính năng chính
 
-- **Agent thông minh**: Tự động lựa chọn công cụ phù hợp (Text-to-SQL, RAG)
-- **Text-to-SQL**: Chuyển đổi ngôn ngữ tự nhiên thành SQL queries
-- **RAG**: Semantic search trên knowledge base được vector hóa
-- **Multi-model**: Tích hợp Gemini + Embedding models
+- **Agent thông minh**: Tự động lựa chọn pipeline phù hợp (SQL RAG, Document RAG)
+- **SQL RAG**: Sử dụng RAG để tìm SQL templates và generate queries an toàn
+- **Document RAG**: Semantic search trên knowledge base được vector hóa
+- **Multi-model**: Tích hợp Gemini + Embedding models cho cả hai pipeline
 
 ---
 
@@ -212,6 +214,25 @@ gcloud iam service-accounts keys create ~/chatbot-service-key.json \
 
 # Set environment variable
 export GOOGLE_APPLICATION_CREDENTIALS="$HOME/chatbot-service-key.json"
+```
+
+#### 🔧 **Bước 4: Configure Application**
+
+Thêm vào `application.properties`:
+
+```properties
+# Google Cloud Configuration
+google.cloud.project-id=your-project-id
+google.cloud.location=us-central1
+
+# LangChain4j Vertex AI Configuration
+langchain4j.vertex-ai.project-id=${google.cloud.project-id}
+langchain4j.vertex-ai.location=${google.cloud.location}
+langchain4j.vertex-ai.model-name=gemini-pro
+
+# Embedding Model Configuration
+langchain4j.embedding.model=text-multilingual-embedding-002
+langchain4j.embedding.dimension=768
 
 
 
@@ -222,7 +243,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="$HOME/chatbot-service-key.json"
 | Gemini Pro | $0.000125 | $0.000375 |
 | text-multilingual-embedding-002 | $0.0001 | - |
 
-
+---
 
 
 
@@ -250,17 +271,5 @@ gcloud services list --enabled --filter="aiplatform"
 ```
 
 ---
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-
-**Built with ❤️ using Spring Boot, LangChain4j, and Google Vertex AI**
-
-[Documentation](docs/) • [Issues](https://github.com/your-repo/issues) • [Contributing](CONTRIBUTING.md)
 
 </div>
