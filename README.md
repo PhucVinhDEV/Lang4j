@@ -46,30 +46,6 @@ Khi người dùng gửi một câu hỏi, Agent của chatbot sẽ xử lý nh�
 - **Ngưỡng tương đồng tối thiểu (Minimum Score)**: Bạn có thể đặt một ngưỡng điểm tương đồng (`min_score`) để lọc ra những kết quả không đủ liên quan.
 - **Tái xếp hạng (Re-ranking)**: Đối với các hệ thống phức tạp hơn, sau khi truy xuất, một mô hình `cross-encoder` (re-ranker) có thể được sử dụng để đánh giá lại và sắp xếp lại các tài liệu, giúp đưa ra kết quả chính xác nhất lên đầu.
 
-#### Sơ đồ luồng truy vấn
-
-```mermaid
-graph TD
-    A[👤 Người dùng] --> B{🤖 Chatbot Agent};
-    B --> C{🧠 Phân tích ý định <br> (Gemini Model)};
-    C --> D{🛠️ Lựa chọn công cụ};
-
-    subgraph "Luồng 1: Text-to-SQL"
-        D -- "Câu hỏi có cấu trúc" --> E[📝 Tạo câu lệnh SQL <br> (Gemini Model)];
-        E --> F[🐘 Thực thi trên PostgreSQL];
-        F --> G[📊 Dữ liệu trả về];
-    end
-
-    subgraph "Luồng 2: RAG"
-        D -- "Câu hỏi ngữ nghĩa" --> H[🔍 Tìm kiếm tương đồng <br> (ChromaDB)];
-        H --> I[📄 Tài liệu liên quan];
-    end
-
-    G --> J{✨ Tổng hợp & Tạo câu trả lời <br> (Gemini Model)};
-    I --> J;
-    J --> K[💬 Phản hồi cho người dùng];
-    K --> A;
-```
 
 ## Tính năng chính
 
