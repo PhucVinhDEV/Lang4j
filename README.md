@@ -84,11 +84,18 @@ User Question → Query Analysis → Pipeline Selection → RAG Retrieval → SQ
 
 ### 3. RAG Customization
 
+
+1.  **Phân tích câu hỏi phân tích câu hỏi của người dùng để xác định ý định.
+2.  **Lựa chọn công cụ (Tool Selection)**:
+
+- **Text-to-SQL**: Nếu câu hỏi yêu cầu dữ liệu có cấu trúc (ví dụ: "giá sản phẩm X là bao nhiêu?", "còn bao nhiêu sản phẩm trong kho?"), Agent sẽ sử dụng **Embedding Model (text-multilingual-embedding-002)** để tạo một câu lệnh SQL tương ứng.
+- **RAG (ChromaDB Search)**: Nếu câu hỏi mang tính ngữ nghĩa hoặc yêu cầu mô tả (ví dụ: "gợi ý sản phẩm phù hợp cho người mới bắt đầu"), Agent sẽ thực hiện tìm kiếm trong **ChromaDB** để lấy ra các tài liệu liên quan.
+
 - **Top K**: Số lượng documents truy xuất
 - **Minimum Score**: Ngưỡng similarity threshold
 - **Re-ranking**: Cross-encoder để cải thiện độ chính xác
 
----
+
 
 ## Tính năng chính
 
@@ -158,6 +165,7 @@ ChromaDB được quản lý tự động thông qua **Testcontainers**. Chỉ c
 ### 3. Google Vertex AI Setup
 
 #### 🔧 **Bước 1: Tạo Google Cloud Project**
+
 
 ```bash
 # Tạo project mới
