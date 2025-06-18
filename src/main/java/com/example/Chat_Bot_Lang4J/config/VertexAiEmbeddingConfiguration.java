@@ -1,22 +1,14 @@
 package com.example.Chat_Bot_Lang4J.config;
 
-import dev.langchain4j.data.segment.TextSegment;
+
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import dev.langchain4j.model.vertexai.VertexAiEmbeddingModel;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.testcontainers.chromadb.ChromaDBContainer;
 
-import java.util.UUID;
-
-import static dev.langchain4j.internal.Utils.randomUUID;
 /**
  * Configuration class for VertexAI Embedding Model and ChromaDB integration.
  *

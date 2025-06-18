@@ -28,4 +28,12 @@ public class Categories {
 
     @OneToMany(mappedBy = "category")
     private List<Product> products;
+
+    // Constructor tùy chỉnh để tạo Categories mà không cần products list
+    public Categories(Long id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.products = null; // Sẽ được set sau khi có products
+    }
 }
