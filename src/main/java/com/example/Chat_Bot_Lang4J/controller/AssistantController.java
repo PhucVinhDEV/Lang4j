@@ -53,7 +53,7 @@ public class AssistantController {
             result.put("response", response);
             result.put("timestamp", System.currentTimeMillis());
 
-            log.info("✅ Chat response generated successfully");
+            log.info("✅ Chat response generated successfully: {}", response);
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {

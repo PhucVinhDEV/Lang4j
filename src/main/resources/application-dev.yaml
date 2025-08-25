@@ -1,0 +1,33 @@
+# 🚀 Development Profile - Local Embedding for Zero Quota Issues
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shopee_db?reWriteBatchedInserts=true
+    username: bitznomad
+    password: 123123a
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# 🏠 Development Embedding Configuration
+embedding:
+  use-local: true # Always use local in development
+  fallback-enabled: true
+  cache-enabled: true
+
+# Logging for development
+logging:
+  level:
+    com.example.Chat_Bot_Lang4J.config.SemanticIntentClassifier: DEBUG
+    com.example.Chat_Bot_Lang4J.config.LocalEmbeddingService: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
+
+# Development ChromaDB
+chroma:
+  default-url: http://localhost:8000
+  startup-wait-ms: 5000
+  collection-name: chat-bot-dev-collection
