@@ -2,128 +2,152 @@
 
 <div align="center">
 
-**Intelligent Chatbot with RAG and Text-to-SQL Capabilities**
+**Intelligent E-commerce Chatbot with Function Calling & Intent Classification**
 
 [![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-6DB33F?style=flat-square&logo=spring-boot)](https://spring.io/projects/spring-boot)
 [![LangChain4j](https://img.shields.io/badge/LangChain4j-1.0.0-FF6B35?style=flat-square&logo=chainlink&logoColor=white)](https://github.com/langchain4j/langchain4j)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-316192?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 </div>
 
 ---
 
-## Giới thiệu
+## 🎯 Giới thiệu
 
-Dự án chatbot được xây dựng với **Spring Boot** và **LangChain4j**, triển khai hệ thống **Retrieval-Augmented Generation (RAG)** với hai luồng xử lý thông minh. Chatbot có khả năng:
+Hệ thống chatbot thông minh cho e-commerce được xây dựng với **Spring Boot** và **LangChain4j**. Chatbot có khả năng:
 
-- **SQL RAG**: Sử dụng RAG để tìm kiếm SQL templates/examples, sau đó generate SQL queries cho dữ liệu có cấu trúc
-- **Document RAG**: Tìm kiếm ngữ nghĩa trong ChromaDB để trả lời câu hỏi mô tả và gợi ý
+- **🤖 Function Calling**: Truy vấn database PostgreSQL thông qua các function tools
+- **🧠 Intent Classification**: Phân loại ý định người dùng với semantic embedding
+- **🔍 Multi-mode Interaction**: 4 chế độ chat khác nhau cho các trường hợp sử dụng khác nhau
+- **📊 Database Integration**: Quản lý sản phẩm và danh mục hoàn chỉnh
 
 ---
 
-## Kiến trúc
+## 🏗️ Kiến trúc hệ thống
 
 ```mermaid
 graph TB
-    A[User Query] --> B[Gemini Agent]
-    
-    B --> C{Query Analysis}
-    
-    C -->|Structured Data<br/>Price, Stock, Count| D[SQL RAG Pipeline]
-    C -->|Semantic Search<br/>Recommendations, Descriptions| E[Document RAG Pipeline]
-    
-    D --> F[Embedding Model<br/>text-multilingual-embedding-002]
-    F --> G[ChromaDB SQL Context Search]
-    G --> H[SQL Templates & Examples]
-    H --> I[Gemini SQL Generator]
-    I --> J[PostgreSQL Execution]
-    J --> K[Query Results]
-    
-    E --> L[Embedding Model<br/>text-multilingual-embedding-002]
-    L --> M[ChromaDB Document Search]
-    M --> N[Relevant Documents]
-    
-    K --> O[Gemini Response Generator]
-    N --> O
-    
-    O --> P[Natural Language Response]
-    
+    A[User Query] --> B[Intent Classification]
+    B --> C{Semantic Intent Analysis}
+
+    C -->|DATABASE_QUERY<br/>Structured Data| D[Function Calling Mode]
+    C -->|VECTOR_SEARCH<br/>Advisory Queries| E[Vector RAG Mode]
+    C -->|HYBRID<br/>General Chat| F[Direct LLM Mode]
+
+    D --> G[Database Tools]
+    G --> H[PostgreSQL]
+    H --> I[Structured Results]
+
+    E --> J[ChromaDB Vector Search]
+    J --> K[Relevant Documents]
+
+    F --> L[Direct Gemini Chat]
+
+    I --> M[Gemini Response Generator]
+    K --> M
+    L --> M
+
+    M --> N[Natural Language Response]
+
+    subgraph "🔧 Database Tools"
+        G1[findProductById]
+        G2[searchProductsByName]
+        G3[findProductsByPriceRange]
+        G4[getAllCategories]
+        G5[getDatabaseStatistics]
+    end
+
+    G --> G1
+    G --> G2
+    G --> G3
+    G --> G4
+    G --> G5
+
     style A fill:#e1f5fe
-    style P fill:#e8f5e8
+    style N fill:#e8f5e8
     style C fill:#fff3e0
     style D fill:#fce4ec
     style E fill:#f3e5f5
-    style O fill:#e0f2f1
+    style F fill:#e0f2f1
 ```
 
 ---
 
-## Luồng hoạt động
+## 🧠 Intent Classification System
 
-### 1. Data Ingestion (RAG Pipeline)
+Hệ thống sử dụng **Semantic Intent Classification** với embedding model để phân loại ý định người dùng:
 
-```
-PostgreSQL → Embedding Model → ChromaDB Vector Store
-```
+### 3 Loại Intent Chính
 
-1. **Đọc dữ liệu**: Lấy thông tin sản phẩm từ PostgreSQL
-2. **Tạo Embeddings**: Sử dụng `text-multilingual-embedding-002` để vector hóa
-3. **Lưu trữ Vector**: Lưu vào ChromaDB cho semantic search
+| Intent                | Mô tả                        | Ví dụ câu hỏi                                        | Xử lý                         |
+| --------------------- | ---------------------------- | ---------------------------------------------------- | ----------------------------- |
+| **🗄️ DATABASE_QUERY** | Truy vấn dữ liệu có cấu trúc | "Giá iPhone là bao nhiêu?", "Tồn kho sản phẩm ID 5"  | Function Calling → PostgreSQL |
+| **🔍 VECTOR_SEARCH**  | Tìm kiếm ngữ nghĩa, tư vấn   | "Gợi ý laptop cho sinh viên", "So sánh các sản phẩm" | Vector RAG → ChromaDB         |
+| **💬 HYBRID**         | Chat chung, hỏi đáp          | "Xin chào", "Bạn có thể làm gì?"                     | Direct LLM Chat               |
 
-### 2. Query Processing
+### 4 Chế độ Chat
 
-```
-User Question → Query Analysis → Pipeline Selection → RAG Retrieval → SQL/Document Processing → Response Generation
-```
+| Endpoint                       | Mục đích                  | Tính năng                                |
+| ------------------------------ | ------------------------- | ---------------------------------------- |
+| `/api/assistant/chat`          | **RAG-Enhanced Chat**     | Intent Classification + Function Calling |
+| `/api/assistant/function-chat` | **Pure Function Calling** | Chỉ dùng Database Tools                  |
+| `/api/assistant/simple-chat`   | **Simple Retrieval**      | Tìm kiếm cơ bản + LLM                    |
+| `/api/assistant/original-chat` | **Original Mode**         | Database stats + LLM                     |
 
-| Pipeline | Khi nào sử dụng | Process | Ví dụ |
-|----------|----------------|---------|-------|
-| **SQL RAG** | Dữ liệu có cấu trúc, số liệu | RAG SQL templates → Generate SQL → Execute | "Giá iPhone 15 là bao nhiêu?" |
-| **Document RAG** | Câu hỏi ngữ nghĩa, gợi ý | RAG documents → Context retrieval | "Smartphone nào phù hợp cho sinh viên?" |
+## 🔧 Database Tools Available
 
-### 3. RAG Customization
+Hệ thống cung cấp 8 function tools để truy vấn database:
 
+- `findProductById(id)` - Tìm sản phẩm theo ID
+- `searchProductsByName(name)` - Tìm sản phẩm theo tên
+- `findProductsByPriceRange(min, max)` - Tìm theo khoảng giá
+- `getAllCategories()` - Lấy tất cả danh mục
+- `findCategoryById(id)` - Tìm danh mục theo ID
+- `findProductsByCategoryId(id)` - Lấy sản phẩm theo danh mục
+- `countProductsByCategory(name)` - Đếm sản phẩm theo danh mục
+- `getDatabaseStatistics()` - Thống kê tổng quan
 
-1.  **Phân tích câu hỏi phân tích câu hỏi của người dùng để xác định ý định.
-2.  **Lựa chọn công cụ (Tool Selection)**:
+## ⭐ Tính năng chính
 
-- **Text-to-SQL**: Nếu câu hỏi yêu cầu dữ liệu có cấu trúc (ví dụ: "giá sản phẩm X là bao nhiêu?", "còn bao nhiêu sản phẩm trong kho?"), Agent sẽ sử dụng **Embedding Model (text-multilingual-embedding-002)** để tạo một câu lệnh SQL tương ứng.
-- **RAG (ChromaDB Search)**: Nếu câu hỏi mang tính ngữ nghĩa hoặc yêu cầu mô tả (ví dụ: "gợi ý sản phẩm phù hợp cho người mới bắt đầu"), Agent sẽ thực hiện tìm kiếm trong **ChromaDB** để lấy ra các tài liệu liên quan.
-
-- **Top K**: Số lượng documents truy xuất
-- **Minimum Score**: Ngưỡng similarity threshold
-- **Re-ranking**: Cross-encoder để cải thiện độ chính xác
-
-
-
-## Tính năng chính
-
-- **Agent thông minh**: Tự động lựa chọn pipeline phù hợp (SQL RAG, Document RAG)
-- **SQL RAG**: Sử dụng RAG để tìm SQL templates và generate queries an toàn
-- **Document RAG**: Semantic search trên knowledge base được vector hóa
-- **Multi-model**: Tích hợp Gemini + Embedding models cho cả hai pipeline
+- **🤖 Function Calling**: Tích hợp LangChain4j Tools với PostgreSQL database
+- **🧠 Intent Classification**: Phân loại ngữ nghĩa với confidence scoring
+- **🔍 Multi-mode Chat**: 4 chế độ chat cho các use case khác nhau
+- **📊 Smart Database Query**: 8 function tools truy vấn dữ liệu thông minh
+- **🎯 Real-time Processing**: Response nhanh với caching mechanism
+- **🌐 RESTful APIs**: Đầy đủ endpoints quản lý dữ liệu và chat
+- **🛡️ Error Handling**: Robust error handling với fallback mechanisms
+- **📝 Rich Responses**: Format kết quả với emoji và markdown
 
 ---
 
-## Tech Stack
+## 💻 Tech Stack
 
 <table>
 <tr>
-<td><strong>Backend</strong></td>
+<td><strong>🎯 Backend Framework</strong></td>
 <td>Spring Boot 3.4.5, Java 17, Maven</td>
 </tr>
 <tr>
-<td><strong>AI/LLM</strong></td>
-<td>LangChain4j 1.0.0, Google Gemini (Vertex AI), text-multilingual-embedding-002</td>
+<td><strong>🤖 AI/LLM Stack</strong></td>
+<td>LangChain4j 1.0.0, Google Gemini (Vertex AI), Function Calling</td>
 </tr>
 <tr>
-<td><strong>Database</strong></td>
-<td>PostgreSQL, ChromaDB (Testcontainers)</td>
+<td><strong>🗄️ Databases</strong></td>
+<td>PostgreSQL (Main DB), ChromaDB (Vector Store), Testcontainers</td>
 </tr>
 <tr>
-<td><strong>Tools</strong></td>
-<td>Docker, Lombok</td>
+<td><strong>🧠 ML/Embedding</strong></td>
+<td>text-multilingual-embedding-002, Local Embedding (Fallback)</td>
+</tr>
+<tr>
+<td><strong>🔧 Tools & Utils</strong></td>
+<td>Docker, Lombok, SLF4J Logging</td>
+</tr>
+<tr>
+<td><strong>🌐 API & Web</strong></td>
+<td>Spring Web, RESTful APIs, CORS Support</td>
 </tr>
 </table>
 
@@ -131,12 +155,12 @@ User Question → Query Analysis → Pipeline Selection → RAG Retrieval → SQ
 
 ## Prerequisites
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| **Java JDK** | 17+ | [Download](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) |
-| **Maven** | 3.8+ | [Download](https://maven.apache.org/download.cgi) |
-| **Docker** | Latest | [Download](https://www.docker.com/products/docker-desktop/) |
-| **PostgreSQL** | 13+ | [Download](https://www.postgresql.org/download/) |
+| Tool           | Version | Purpose                                                                                  |
+| -------------- | ------- | ---------------------------------------------------------------------------------------- |
+| **Java JDK**   | 17+     | [Download](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html) |
+| **Maven**      | 3.8+    | [Download](https://maven.apache.org/download.cgi)                                        |
+| **Docker**     | Latest  | [Download](https://www.docker.com/products/docker-desktop/)                              |
+| **PostgreSQL** | 13+     | [Download](https://www.postgresql.org/download/)                                         |
 
 ---
 
@@ -165,7 +189,6 @@ ChromaDB được quản lý tự động thông qua **Testcontainers**. Chỉ c
 ### 3. Google Vertex AI Setup
 
 #### 🔧 **Bước 1: Tạo Google Cloud Project**
-
 
 ```bash
 # Tạo project mới
@@ -228,7 +251,7 @@ export GOOGLE_APPLICATION_CREDENTIALS="$HOME/chatbot-service-key.json"
 
 Thêm vào `application.properties`:
 
-```properties
+````properties
 # Google Cloud Configuration
 google.cloud.project-id=your-project-id
 google.cloud.location=us-central1
@@ -253,31 +276,202 @@ langchain4j.embedding.dimension=768
 
 ---
 
+## 🚀 API Endpoints
 
+### 1. 🤖 Chat Endpoints
 
-## Troubleshooting
+#### RAG-Enhanced Chat (Recommended)
+```http
+POST /api/assistant/chat
+Content-Type: application/json
+
+{
+    "message": "Tôi muốn tìm laptop Gaming dưới 25 triệu"
+}
+````
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "response": "🎮 Tôi tìm thấy một số laptop Gaming phù hợp...",
+  "intent": "DATABASE_QUERY",
+  "confidence": 0.89,
+  "retrievedContext": "📦 SẢN PHẨM TÌM ĐƯỢC...",
+  "timestamp": 1703123456789
+}
+```
+
+#### Pure Function Calling Chat
+
+```http
+POST /api/assistant/function-chat
+Content-Type: application/json
+
+{
+    "message": "Sản phẩm ID 5 giá bao nhiêu?"
+}
+```
+
+#### Simple Chat
+
+```http
+POST /api/assistant/simple-chat
+Content-Type: application/json
+
+{
+    "message": "Có laptop Dell nào không?"
+}
+```
+
+#### Original Chat (Database Stats)
+
+```http
+POST /api/assistant/original-chat
+Content-Type: application/json
+
+{
+    "message": "Thống kê sản phẩm"
+}
+```
+
+### 2. 📊 Data Management
+
+#### Get All Products
+
+```http
+GET /api/assistant/search/products?keyword=laptop
+```
+
+#### Get Product Details
+
+```http
+GET /api/assistant/product/123
+```
+
+#### Get Statistics
+
+```http
+GET /api/assistant/statistics
+```
+
+#### Search Categories
+
+```http
+GET /api/assistant/search/categories?keyword=điện%20tử
+```
+
+### 3. 🔧 System Management
+
+#### Check Vector Store Status
+
+```http
+GET /api/assistant/vector-status
+```
+
+#### Initialize Vector Store
+
+```http
+POST /api/assistant/initialize-vectors
+```
+
+### 4. 📝 Example Chat Queries
+
+| Loại câu hỏi            | Ví dụ                               | Endpoint được khuyến nghị      |
+| ----------------------- | ----------------------------------- | ------------------------------ |
+| **Tìm sản phẩm cụ thể** | "Giá iPhone 15 là bao nhiêu?"       | `/api/assistant/function-chat` |
+| **Khoảng giá**          | "Laptop từ 15-25 triệu"             | `/api/assistant/chat`          |
+| **Tư vấn**              | "Laptop nào phù hợp cho sinh viên?" | `/api/assistant/chat`          |
+| **Thống kê**            | "Có bao nhiêu sản phẩm?"            | `/api/assistant/function-chat` |
+| **Chat chung**          | "Xin chào, bạn có thể làm gì?"      | `/api/assistant/simple-chat`   |
+
+---
+
+## 🔧 Troubleshooting
 
 ### Common Issues
 
 **🔴 Vertex AI Authentication Error**
+
 ```bash
 # Re-authenticate
 gcloud auth application-default revoke
 gcloud auth application-default login
 ```
 
-**🔴 Project ID Not Found**
+**🔴 Function Calling Not Working**
+
+- ✅ Kiểm tra DatabaseTools có được register đúng không
+- ✅ Xem logs để debug function execution
+- ✅ Test với `/api/assistant/function-chat` endpoint
+
+**🔴 Intent Classification Issues**
+
 ```bash
-# Verify project exists and is accessible
-gcloud projects describe your-project-id
+# Check embedding service status
+curl GET http://localhost:8080/api/assistant/vector-status
 ```
 
-**🔴 API Not Enabled**
+**🔴 Database Connection**
+
+- ✅ Kiểm tra PostgreSQL đang chạy: `pg_isready`
+- ✅ Verify connection string trong `application.yaml`
+- ✅ Test database với `/api/assistant/statistics`
+
+**🔴 ChromaDB Vector Store**
+
 ```bash
-# Check enabled APIs
-gcloud services list --enabled --filter="aiplatform"
+# Reinitialize vector store
+curl -X POST http://localhost:8080/api/assistant/initialize-vectors
+```
+
+### 🚀 Quick Start Guide
+
+1. **Clone và setup:**
+
+```bash
+git clone <repository>
+cd Chat_Bot_Lang4J
+mvn clean install
+```
+
+2. **Start PostgreSQL:**
+
+```bash
+# Windows
+net start postgresql-x64-13
+
+# macOS/Linux
+sudo service postgresql start
+```
+
+3. **Initialize sample data:**
+
+```bash
+mvn spring-boot:run
+curl -X POST http://localhost:8080/api/data/init-sample-data
+```
+
+4. **Test chat:**
+
+```bash
+curl -X POST http://localhost:8080/api/assistant/function-chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Có bao nhiêu sản phẩm?"}'
+```
+
+### 📊 Health Check
+
+```bash
+# System status
+curl GET http://localhost:8080/api/assistant/statistics
+curl GET http://localhost:8080/api/assistant/vector-status
+
+# Test all chat modes
+curl -X POST http://localhost:8080/api/assistant/chat -H "Content-Type: application/json" -d '{"message": "Test"}'
+curl -X POST http://localhost:8080/api/assistant/function-chat -H "Content-Type: application/json" -d '{"message": "Test"}'
+curl -X POST http://localhost:8080/api/assistant/simple-chat -H "Content-Type: application/json" -d '{"message": "Test"}'
 ```
 
 ---
-
-</div>

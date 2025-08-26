@@ -29,7 +29,7 @@ vertex:
     location: us-central1
     endpoint: us-central1-aiplatform.googleapis.com:443
     publisher: google
-    model-name: text-multilingual-embedding-002
+    model-name: gemini-embedding-001
     max-retries: 3
     max-segments-per-batch: 40
     max-tokens-per-batch: 2048
